@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use std::{
     env,
     fmt::{self, Display},
@@ -15,7 +15,7 @@ pub trait Input: Sized {
 
 impl<T: FromStr> Input for Vec<T>
 where
-    T::Err: std::error::Error + Send + Sync + 'static,
+    T::Err: Display,
 {
     fn parse<R: BufRead>(reader: R) -> Result<Self> {
         reader
@@ -23,7 +23,7 @@ where
             .enumerate()
             .map(|(line_number, line)| {
                 T::from_str(&line.context("Failed to read line")?)
-                    .with_context(|| format!("Failed to parse line {}", line_number + 1))
+                    .map_err(|e| anyhow!("Failed to parse line {}: {}", line_number + 1, e))
             })
             .collect()
     }
