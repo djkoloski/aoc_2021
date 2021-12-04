@@ -24,9 +24,9 @@ impl FromStr for Command {
     }
 }
 
-struct DayN;
+struct Day2;
 
-impl Problem for DayN {
+impl Problem for Day2 {
     type Input = Vec<Command>;
     type PartOne = i32;
     type PartTwo = i32;
@@ -51,5 +51,5 @@ impl Problem for DayN {
 }
 
 fn main() {
-    solve_main::<DayN>();
+    solve_main::<Day2>();
 }
