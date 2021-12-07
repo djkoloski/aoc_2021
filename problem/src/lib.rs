@@ -1,11 +1,11 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use std::{
     env,
     fmt::{self, Display},
     fs::File,
     io::{BufRead, BufReader},
     path::Path,
-    str::FromStr,
+    str::{from_utf8, FromStr},
     time::{Duration, Instant},
 };
 
@@ -44,6 +44,38 @@ pub trait Problem {
 
     fn solve_part_one(input: &Self::Input) -> Self::PartOne;
     fn solve_part_two(input: &Self::Input) -> Self::PartTwo;
+}
+
+pub struct CSV<T>(Vec<T>);
+
+impl<T> CSV<T> {
+    pub fn values(&self) -> &[T] {
+        &self.0
+    }
+}
+
+impl<T: FromStr> FromStr for CSV<T>
+where
+    T::Err: std::error::Error + Send + Sync + 'static,
+{
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::parse(s.as_bytes())
+    }
+}
+
+impl<T: FromStr> Input for CSV<T>
+where
+    T::Err: std::error::Error + Send + Sync + 'static,
+{
+    fn parse<R: BufRead>(reader: R) -> Result<Self> {
+        let values = reader
+            .split(b',')
+            .map(|x| Ok(from_utf8(&x?)?.parse()?))
+            .collect::<Result<_, Error>>()?;
+        Ok(Self(values))
+    }
 }
 
 pub struct Solution<T> {
