@@ -1,5 +1,5 @@
-use problem::{solve_main, Problem};
 use anyhow::{anyhow, Result};
+use problem::{solve_main, Problem};
 
 #[derive(Default)]
 struct Board {
@@ -46,29 +46,38 @@ impl problem::Input for Input {
     fn parse<R: std::io::BufRead>(reader: R) -> Result<Self> {
         let mut lines = reader.lines();
 
-        let numbers = lines.next().ok_or(anyhow!("Misisng numbers line"))??.split(',').map(|x| Ok(x.parse::<u8>()?)).collect::<Result<Vec<_>>>()?;
+        let numbers = lines
+            .next()
+            .ok_or(anyhow!("Misisng numbers line"))??
+            .split(',')
+            .map(|x| Ok(x.parse::<u8>()?))
+            .collect::<Result<Vec<_>>>()?;
 
         let mut boards = Vec::new();
         while let Some(blank) = lines.next() {
             let mut line = blank?;
-            if line != "" {
+            if !line.is_empty() {
                 let mut board = Board::default();
                 for i in 0..5 {
-                    for (j, n) in line.split(' ').filter(|&n| n != "").map(|n| n.parse()).enumerate() {
+                    for (j, n) in line
+                        .split(' ')
+                        .filter(|&n| !n.is_empty())
+                        .map(|n| n.parse())
+                        .enumerate()
+                    {
                         board.numbers[5 * i + j] = n?;
                     }
                     if i < 4 {
-                        line = lines.next().ok_or(anyhow!("Missing line {} of a board", i))??;
+                        line = lines
+                            .next()
+                            .ok_or_else(|| anyhow!("Missing line {} of a board", i))??;
                     }
                 }
                 boards.push(board);
             }
         }
 
-        Ok(Self {
-            numbers,
-            boards,
-        })
+        Ok(Self { numbers, boards })
     }
 }
 
@@ -85,7 +94,11 @@ impl Problem for Day4 {
             order[n as usize] = i as u8;
         }
 
-        let winner = input.boards.iter().min_by_key(|&b| b.earliest_win(&order)).unwrap();
+        let winner = input
+            .boards
+            .iter()
+            .min_by_key(|&b| b.earliest_win(&order))
+            .unwrap();
         let draw = winner.earliest_win(&order);
         let total = winner.unmarked_total(&order, draw);
         let last = input.numbers[draw as usize] as usize;
@@ -98,7 +111,11 @@ impl Problem for Day4 {
             order[n as usize] = i as u8;
         }
 
-        let loser = input.boards.iter().max_by_key(|&b| b.earliest_win(&order)).unwrap();
+        let loser = input
+            .boards
+            .iter()
+            .max_by_key(|&b| b.earliest_win(&order))
+            .unwrap();
         let draw = loser.earliest_win(&order);
         let total = loser.unmarked_total(&order, draw);
         let last = input.numbers[draw as usize] as usize;

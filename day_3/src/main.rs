@@ -27,10 +27,7 @@ impl problem::Input for Input {
             }
             entries.push(entry);
         }
-        Ok(Self {
-            width,
-            entries,
-        })
+        Ok(Self { width, entries })
     }
 }
 
@@ -39,7 +36,10 @@ fn find_rating(input: &Input, value: Entry) -> usize {
     let mut i = input.width;
     while candidates.len() > 1 {
         i -= 1;
-        let ones = candidates.iter().map(|&c| (c >> i & 1) as usize).sum::<usize>();
+        let ones = candidates
+            .iter()
+            .map(|&c| (c >> i & 1) as usize)
+            .sum::<usize>();
         let zeros = candidates.len() - ones;
         let filter = if ones >= zeros { value } else { 1 - value };
         candidates.retain(|&c| c >> i & 1 == filter);
@@ -58,12 +58,16 @@ impl Problem for Day3 {
         let mut gamma = 0;
         for i in (0..input.width).rev() {
             gamma <<= 1;
-            let ones = input.entries.iter().map(|&e| (e >> i & 1) as usize).sum::<usize>();
+            let ones = input
+                .entries
+                .iter()
+                .map(|&e| (e >> i & 1) as usize)
+                .sum::<usize>();
             if ones >= input.entries.len() - ones {
                 gamma |= 1;
             }
         }
-        let epsilon = gamma ^ (1 << input.width) - 1;
+        let epsilon = gamma ^ ((1 << input.width) - 1);
         gamma * epsilon
     }
 

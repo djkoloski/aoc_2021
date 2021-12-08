@@ -32,20 +32,25 @@ impl Problem for Day2 {
     type PartTwo = i32;
 
     fn solve_part_one(input: &Self::Input) -> Self::PartOne {
-        let (pos, depth) = input.iter().fold((0, 0), |(pos, depth), command| match command {
-            Command::Forward(amount) => (pos + amount, depth),
-            Command::Down(amount) => (pos, depth + amount),
-            Command::Up(amount) => (pos, depth - amount),
-        });
+        let (pos, depth) = input
+            .iter()
+            .fold((0, 0), |(pos, depth), command| match command {
+                Command::Forward(amount) => (pos + amount, depth),
+                Command::Down(amount) => (pos, depth + amount),
+                Command::Up(amount) => (pos, depth - amount),
+            });
         pos * depth
     }
 
     fn solve_part_two(input: &Self::Input) -> Self::PartTwo {
-        let (pos, depth, _) = input.iter().fold((0, 0, 0), |(pos, depth, aim), command| match command {
-            Command::Forward(amount) => (pos + amount, depth + aim * amount, aim),
-            Command::Down(amount) => (pos, depth, aim + amount),
-            Command::Up(amount) => (pos, depth, aim - amount),
-        });
+        let (pos, depth, _) =
+            input
+                .iter()
+                .fold((0, 0, 0), |(pos, depth, aim), command| match command {
+                    Command::Forward(amount) => (pos + amount, depth + aim * amount, aim),
+                    Command::Down(amount) => (pos, depth, aim + amount),
+                    Command::Up(amount) => (pos, depth, aim - amount),
+                });
         pos * depth
     }
 }

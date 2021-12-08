@@ -1,7 +1,7 @@
 use ::core::str::FromStr;
-use std::collections::HashMap;
 use anyhow::{anyhow, Error};
 use problem::{solve_main, Problem};
+use std::collections::HashMap;
 
 fn gcd(mut a: i32, mut b: i32) -> i32 {
     while b != 0 {
@@ -45,7 +45,10 @@ impl Line {
         let n = gcd(dy, dx).abs();
         let sx = dx / n;
         let sy = dy / n;
-        (0..=n).map(move |i| Point { x: x0 + sx * i, y: y0 + sy * i })
+        (0..=n).map(move |i| Point {
+            x: x0 + sx * i,
+            y: y0 + sy * i,
+        })
     }
 }
 
