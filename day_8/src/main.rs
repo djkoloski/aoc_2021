@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use anyhow::{anyhow, Error, Result};
 use problem::{solve_main, Problem};
+use std::str::FromStr;
 
 const A: u8 = 0b0000001;
 const B: u8 = 0b0000010;
@@ -65,7 +65,16 @@ const REAL_DIGITS: [Digit; 10] = [
 impl Display {
     fn solve(&self) -> usize {
         let mut candidates = [
-            vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![], vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
         ];
         for (i, &d) in self.combinations.iter().enumerate() {
             let num_set = d.set();
@@ -81,10 +90,10 @@ impl Display {
                 if candidates[i].len() == 1 {
                     let disc_scrambled = self.combinations[i];
                     let disc_real = REAL_DIGITS[candidates[i][0]];
-                    for j in 0..10 {
+                    for (j, candidates) in candidates.iter_mut().enumerate() {
                         let unknown_scrambled = self.combinations[j];
                         let matches = unknown_scrambled.matches(disc_scrambled);
-                        candidates[j].retain(|c| REAL_DIGITS[*c].matches(disc_real) == matches);
+                        candidates.retain(|c| REAL_DIGITS[*c].matches(disc_real) == matches);
                     }
                 }
             }
@@ -92,7 +101,9 @@ impl Display {
 
         let mut result = 0;
         for i in 0..4 {
-            let index = (0..10).find(|&n| self.combinations[n] == self.digits[i]).unwrap();
+            let index = (0..10)
+                .find(|&n| self.combinations[n] == self.digits[i])
+                .unwrap();
             result = result * 10 + candidates[index][0];
         }
 
@@ -108,10 +119,20 @@ impl FromStr for Display {
         let mut digits = [Digit::default(); 4];
 
         let mut pieces = s.split(" | ");
-        for (i, combination) in pieces.next().ok_or(anyhow!("Missing combinations"))?.split(' ').enumerate() {
+        for (i, combination) in pieces
+            .next()
+            .ok_or(anyhow!("Missing combinations"))?
+            .split(' ')
+            .enumerate()
+        {
             combinations[i] = combination.parse()?;
         }
-        for (i, digit) in pieces.next().ok_or(anyhow!("Missing digits"))?.split(' ').enumerate() {
+        for (i, digit) in pieces
+            .next()
+            .ok_or(anyhow!("Missing digits"))?
+            .split(' ')
+            .enumerate()
+        {
             digits[i] = digit.parse()?;
         }
         Ok(Display {
@@ -129,7 +150,15 @@ impl Problem for Day8 {
     type PartTwo = usize;
 
     fn solve_part_one(input: &Self::Input) -> Self::PartOne {
-        input.iter().map(|d| d.digits.iter().filter(|d| d.set() == 2 || d.set() == 3 || d.set() == 4 || d.set() == 7 ).count()).sum()
+        input
+            .iter()
+            .map(|d| {
+                d.digits
+                    .iter()
+                    .filter(|d| d.set() == 2 || d.set() == 3 || d.set() == 4 || d.set() == 7)
+                    .count()
+            })
+            .sum()
     }
 
     fn solve_part_two(input: &Self::Input) -> Self::PartTwo {
