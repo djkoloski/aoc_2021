@@ -1,8 +1,8 @@
-use std::iter;
-use anyhow::Context;
 use ::anyhow::{anyhow, Result};
 use ::bitvec::prelude::*;
+use anyhow::Context;
 use problem::{solve_main, Problem};
+use std::iter;
 
 #[derive(Clone)]
 pub struct Grid {
@@ -52,7 +52,7 @@ impl Grid {
     pub fn neighbor_index(&self, x: usize, y: usize, rest_lit: bool) -> usize {
         let mut result = 0;
         for ny in y as isize - 1..=y as isize + 1 {
-            for nx in x as isize - 1..= x as isize + 1 {
+            for nx in x as isize - 1..=x as isize + 1 {
                 result <<= 1;
                 result |= if self.get_any(nx, ny, rest_lit) { 1 } else { 0 };
             }
@@ -91,7 +91,12 @@ impl problem::Input for Input {
         let mut lines = reader.lines();
 
         let mut lookup = bitarr![0; 512];
-        for (i, c) in lines.next().ok_or(anyhow!("Missing enhancement algorithm"))??.chars().enumerate() {
+        for (i, c) in lines
+            .next()
+            .ok_or(anyhow!("Missing enhancement algorithm"))??
+            .chars()
+            .enumerate()
+        {
             match c {
                 '.' => lookup.set(i, false),
                 '#' => lookup.set(i, true),
@@ -99,7 +104,9 @@ impl problem::Input for Input {
             }
         }
 
-        lines.next().context("Expected line separator between enhancement algorithm and input image")??;
+        lines
+            .next()
+            .context("Expected line separator between enhancement algorithm and input image")??;
 
         let first_line = lines.next().context("Missing input image")??;
         let mut initial = Grid::new(first_line.len());
@@ -113,10 +120,7 @@ impl problem::Input for Input {
             }
         }
 
-        Ok(Self {
-            lookup,
-            initial,
-        })
+        Ok(Self { lookup, initial })
     }
 }
 
