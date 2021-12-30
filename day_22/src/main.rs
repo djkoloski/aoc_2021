@@ -1,6 +1,6 @@
-use ::std::{iter::IntoIterator, str::FromStr};
 use ::anyhow::{anyhow, Error, Result};
 use ::bitvec::prelude::*;
+use ::std::{iter::IntoIterator, str::FromStr};
 use problem::{solve_main, Problem};
 
 #[derive(Clone, Copy, Default)]
@@ -16,10 +16,7 @@ impl Range {
         if lower > upper {
             None
         } else {
-            Some(Self {
-                lower,
-                upper,
-            })
+            Some(Self { lower, upper })
         }
     }
 }
@@ -38,12 +35,15 @@ impl FromStr for Range {
 
     fn from_str(s: &str) -> Result<Self> {
         let mut pieces = s.split("..");
-        let lower = pieces.next().ok_or(anyhow!("Missing lower bound"))?.parse()?;
-        let upper = pieces.next().ok_or(anyhow!("Missing lower bound"))?.parse()?;
-        Ok(Self {
-            lower,
-            upper,
-        })
+        let lower = pieces
+            .next()
+            .ok_or(anyhow!("Missing lower bound"))?
+            .parse()?;
+        let upper = pieces
+            .next()
+            .ok_or(anyhow!("Missing lower bound"))?
+            .parse()?;
+        Ok(Self { lower, upper })
     }
 }
 
@@ -56,9 +56,9 @@ impl Region {
     fn and(self, other: Self) -> Option<Self> {
         self.ranges[0].and(other.ranges[0]).and_then(|x| {
             self.ranges[1].and(other.ranges[1]).and_then(|y| {
-                self.ranges[2].and(other.ranges[2]).map(|z| Self {
-                    ranges: [x, y, z],
-                })
+                self.ranges[2]
+                    .and(other.ranges[2])
+                    .map(|z| Self { ranges: [x, y, z] })
             })
         })
     }
@@ -68,7 +68,7 @@ impl FromStr for Region {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        const PREFIX: [&'static str; 3] = ["x=", "y=", "z="];
+        const PREFIX: [&str; 3] = ["x=", "y=", "z="];
 
         let mut ranges = [Range::default(); 3];
         for (i, piece) in s.split(',').enumerate() {
@@ -77,9 +77,7 @@ impl FromStr for Region {
             }
         }
 
-        Ok(Self {
-            ranges,
-        })
+        Ok(Self { ranges })
     }
 }
 
@@ -92,26 +90,28 @@ impl FromStr for Operation {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let (value, rest) =
-            s.strip_prefix("on ").map(|rest| (true, rest))
+        let (value, rest) = s
+            .strip_prefix("on ")
+            .map(|rest| (true, rest))
             .or_else(|| s.strip_prefix("off ").map(|rest| (false, rest)))
             .ok_or(anyhow!("Invalid operation value, expected 'on' or 'off'"))?;
 
         let region = rest.parse()?;
 
-        Ok(Self {
-            value,
-            region,
-        })
+        Ok(Self { value, region })
     }
 }
 
 fn count_ones(operations: &[Operation]) -> usize {
     let mut breakpoints = [Vec::new(), Vec::new(), Vec::new()];
-    for i in 0..3 {
-        breakpoints[i] = operations.iter().map(|o| [o.region.ranges[i].lower, o.region.ranges[i].upper + 1]).flatten().collect();
-        breakpoints[i].sort_unstable();
-        breakpoints[i].dedup();
+    for (i, breakpoint) in breakpoints.iter_mut().enumerate() {
+        *breakpoint = operations
+            .iter()
+            .map(|o| [o.region.ranges[i].lower, o.region.ranges[i].upper + 1])
+            .flatten()
+            .collect();
+        breakpoint.sort_unstable();
+        breakpoint.dedup();
     }
 
     let size_x = breakpoints[0].len() - 1;
@@ -121,12 +121,24 @@ fn count_ones(operations: &[Operation]) -> usize {
     let mut grid = bitvec![0; area];
 
     for operation in operations.iter() {
-        let op_x_lower = breakpoints[0].binary_search(&operation.region.ranges[0].lower).unwrap();
-        let op_x_upper = breakpoints[0].binary_search(&(operation.region.ranges[0].upper + 1)).unwrap();
-        let op_y_lower = breakpoints[1].binary_search(&operation.region.ranges[1].lower).unwrap();
-        let op_y_upper = breakpoints[1].binary_search(&(operation.region.ranges[1].upper + 1)).unwrap();
-        let op_z_lower = breakpoints[2].binary_search(&operation.region.ranges[2].lower).unwrap();
-        let op_z_upper = breakpoints[2].binary_search(&(operation.region.ranges[2].upper + 1)).unwrap();
+        let op_x_lower = breakpoints[0]
+            .binary_search(&operation.region.ranges[0].lower)
+            .unwrap();
+        let op_x_upper = breakpoints[0]
+            .binary_search(&(operation.region.ranges[0].upper + 1))
+            .unwrap();
+        let op_y_lower = breakpoints[1]
+            .binary_search(&operation.region.ranges[1].lower)
+            .unwrap();
+        let op_y_upper = breakpoints[1]
+            .binary_search(&(operation.region.ranges[1].upper + 1))
+            .unwrap();
+        let op_z_lower = breakpoints[2]
+            .binary_search(&operation.region.ranges[2].lower)
+            .unwrap();
+        let op_z_upper = breakpoints[2]
+            .binary_search(&(operation.region.ranges[2].upper + 1))
+            .unwrap();
         for z in op_z_lower..op_z_upper {
             for y in op_y_lower..op_y_upper {
                 for x in op_x_lower..op_x_upper {
@@ -143,8 +155,7 @@ fn count_ones(operations: &[Operation]) -> usize {
             for x in 0..size_x {
                 let index = x + size_x * (y + size_y * z);
                 if grid[index] {
-                    total +=
-                        (breakpoints[0][x + 1] - breakpoints[0][x]) as usize
+                    total += (breakpoints[0][x + 1] - breakpoints[0][x]) as usize
                         * (breakpoints[1][y + 1] - breakpoints[1][y]) as usize
                         * (breakpoints[2][z + 1] - breakpoints[2][z]) as usize;
                 }
@@ -165,9 +176,18 @@ impl Problem for Day22 {
     fn solve_part_one(input: &Self::Input) -> Self::PartOne {
         const INIT_REGION: Region = Region {
             ranges: [
-                Range { lower: -50, upper: 50 },
-                Range { lower: -50, upper: 50 },
-                Range { lower: -50, upper: 50 },
+                Range {
+                    lower: -50,
+                    upper: 50,
+                },
+                Range {
+                    lower: -50,
+                    upper: 50,
+                },
+                Range {
+                    lower: -50,
+                    upper: 50,
+                },
             ],
         };
         let mut ops = Vec::new();
@@ -184,7 +204,7 @@ impl Problem for Day22 {
     }
 
     fn solve_part_two(input: &Self::Input) -> Self::PartTwo {
-        count_ones(&input)
+        count_ones(input)
     }
 }
 
